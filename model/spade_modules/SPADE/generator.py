@@ -24,7 +24,7 @@ class SPADEGenerator(BaseNetwork):
         # self.opt = opt
         nf = 64
         norm_G = 'spectralinstance'
-        label_nc = 2
+        label_nc = 1 #2
         self.num_upsampling_layers = num_upsampling_layers
         self.sw, self.sh = self.compute_latent_vector_size(num_upsampling_layers, crop_size, aspect_ratio)
         norm_layer = nn.InstanceNorm2d

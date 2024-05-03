@@ -95,7 +95,7 @@ def define_G(opt):
         dropout=model_opt['unet']['dropout'],
         image_size=model_opt['diffusion']['image_size']
     )
-    model_gen = SPADEGenerator(2, 1) 
+    model_gen = SPADEGenerator(1, 1)  # 2 
     netG = diffusion.GaussianDiffusion(
         model_diffusion, model_gen, 
         image_size=model_opt['diffusion']['image_size'],
