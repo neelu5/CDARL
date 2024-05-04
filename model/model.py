@@ -64,7 +64,7 @@ class CDARL(BaseModel):
         self.data = self.set_device(data)
         output, _ = self.netG(self.data)
 
-        self.A_noisy, self.A_latent, self.B_latent, self.mask_V, self.synt_A, self.mask_F = output
+        self.mask_V, self.synt_A, self.mask_F = output #self.A_noisy, self.A_latent, self.B_latent, 
 
         patchNum = 256
         feat_f, sample_ids = self.netH(self.data['F'], patchNum, None)
@@ -105,6 +105,7 @@ class CDARL(BaseModel):
 
         self.mask_V, self.synt_A, self.mask_F = output #self.A_noisy, self.A_latent, self.B_latent, 
         l_cyc = l_cyc * h_beta
+        l_recon=l_recon*0.08
 
         self.set_requires_grad(self.netD, True)
         self.set_requires_grad(self.netD2, True)
@@ -134,7 +135,7 @@ class CDARL(BaseModel):
             l_cont += loss.mean()
 
         l_adv_G = self.netG.loss_gan(self.netD(self.synt_A), True) * h_alpha
-        l_adv_G2 = self.netG.loss_gan(self.netD2(self.mask_v), True) * h_alpha
+        l_adv_G2 = self.netG.loss_gan(self.netD2(self.mask_V), True) * h_alpha
 
         l_tot = l_recon + l_cyc + l_cont + l_adv_G + l_adv_G2
         l_tot.backward()

@@ -217,10 +217,11 @@ class GaussianDiffusion(nn.Module):
         for opt1 in range(2):
             for opt2 in range(2):
                 x_start = x_start_[:, :, opt1::2, opt2::2]
-                b= x_start.shape[0]
-                t = torch.full((b,), 0, device=device, dtype=torch.long)
-                x_latent = self.denoise_fn(x_start, t)
-                segm_V[:, :, opt1::2, opt2::2] = self.segment_fn(torch.cat([x_start, x_latent], dim=1))
+                # b= x_start.shape[0]
+                # t = torch.full((b,), 0, device=device, dtype=torch.long)
+                # x_latent = self.denoise_fn(x_start, t)
+                # segm_V[:, :, opt1::2, opt2::2] = self.segment_fn(torch.cat([x_start, x_latent], dim=1))
+                segm_V[:, :, opt1::2, opt2::2] = self.segment_fn(x_start)
         return segm_V
 
     @torch.no_grad()
@@ -281,7 +282,7 @@ class GaussianDiffusion(nn.Module):
 
         l_cyc = self.loss_cyc(mask_F, x_in['F'])
 
-        return [A_noisy, A_latent, B_latent, mask_V, synt_A, mask_F], [l_recon, l_cyc]
+        return [ mask_V, synt_A, mask_F], [l_recon, l_cyc] #A_noisy, A_latent, B_latent,
 
     def forward(self, x, *args, **kwargs):
         return self.p_losses(x, *args, **kwargs)

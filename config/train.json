@@ -1,8 +1,8 @@
 {
-    "name": "CDARL_default",
+    "name": "Base",
     "phase": "train",
     "gpu_ids": [
-        1
+        0
     ],
     "display_port": 8097,
     "path": {
@@ -15,7 +15,7 @@
     "datasets": {
         "train": {
             "name": "XCAD",
-            "dataroot": "./data/Dataset_XCAD/",
+            "dataroot": "/bhupender/datasets/Angiogram/XCAD/",
             "batch_size": 1,
             "centered": true,
             "num_workers": 4,
@@ -23,7 +23,7 @@
         },
         "val": {
             "name": "XCAD",
-            "dataroot": "./data/Dataset_XCAD/",
+            "dataroot": "/bhupender/datasets/Angiogram/XCAD/",
             "data_len": 3
         }
     },
