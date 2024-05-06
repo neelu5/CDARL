@@ -251,7 +251,7 @@ class GaussianDiffusion(nn.Module):
         #### A path ####
         t_a = torch.randint(0, 200, (b,), device=device).long() #200
         A_noisy = self.q_sample(x_start=a_start, t=t_a, noise=noise)
-        A_latent = self.denoise_fn(A_noisy, t_a)
+        # A_latent = self.denoise_fn(A_noisy, t_a)
         # mask_V = self.segment_fn(torch.cat([A_noisy, A_latent], dim=1))
         mask_V = self.segment_fn(a_start)
 
@@ -260,7 +260,7 @@ class GaussianDiffusion(nn.Module):
         B_noisy = self.q_sample(x_start=a_start, t=t_b, noise=noise)
         B_latent = self.denoise_fn(B_noisy, t_b)
 
-        # fractal = torch.eye(2)[:, torch.clamp_min(x_in['F'][:, 0], 0).type(torch.long)].transpose(0, 1)
+        # fractal = torch.eye(1,device=device)[:, torch.clamp_min(x_in['F'][:, 0], 0).type(torch.long)].transpose(0, 1)
         fractal=torch.clamp_min(x_in['F'][:, 0],0).unsqueeze(0)
         # synt_A = self.segment_fn(torch.cat([B_noisy, B_latent], dim=1), fractal.to(device))
         synt_A = self.segment_fn(a_start, fractal.to(device))
@@ -282,7 +282,7 @@ class GaussianDiffusion(nn.Module):
 
         l_cyc = self.loss_cyc(mask_F, x_in['F'])
 
-        return [ mask_V, synt_A, mask_F], [l_recon, l_cyc] #A_noisy, A_latent, B_latent,
+        return [ A_noisy, B_latent, mask_V, synt_A, mask_F], [l_recon, l_cyc] 
 
     def forward(self, x, *args, **kwargs):
         return self.p_losses(x, *args, **kwargs)

@@ -1,5 +1,5 @@
 {
-    "name": "Base",
+    "name": "blocking mem",
     "phase": "train",
     "gpu_ids": [
         0
@@ -70,7 +70,7 @@
     "train": {
         "n_epoch": 150,
         "val_freq": 1,
-        "save_checkpoint_epoch": 100,
+        "save_checkpoint_epoch": 5,
         "print_freq": 1,
         "lambda_NCE": 4e-4,
         "optimizer": {

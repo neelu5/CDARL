@@ -10,12 +10,12 @@
         "tb_logger": "tb_logger",
         "results": "results",
         "checkpoint": "checkpoint",
-        "resume_state": "experiments/pretrainedd"
+        "resume_state": "/bhupender/2024/CDARL/experiments/New_Main_0.08_240505_063656/checkpoint/I72945_E45"
     },
     "datasets": {
         "train": {
             "name": "XCAD",
-            "dataroot": "./data/Dataset_XCAD/",
+            "dataroot": "/bhupender/datasets/Angiogram/XCAD",
             "batch_size": 1,
             "centered": true,
             "num_workers": 8,
@@ -23,7 +23,7 @@
         },
         "test": {
             "name": "XCAD",
-            "dataroot": "./data/Dataset_XCAD/",
+            "dataroot": "/bhupender/datasets/Angiogram/XCAD",
             "data_len": 3
         }
     },

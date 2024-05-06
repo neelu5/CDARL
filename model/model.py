@@ -15,14 +15,15 @@ class CDARL(BaseModel):
         super(CDARL, self).__init__(opt)
         # define network and load pretrained models
         self.netG = self.set_device(networks.define_G(opt))
+
         self.netH = self.set_device(networks.define_F(opt))
         self.netD = self.set_device(networks.define_D(opt))
         self.netD2 = self.set_device(networks.define_D(opt))
         self.schedule_phase = None
         self.centered = opt['datasets']['train']['centered']
 
-        if opt['path']['resume_state'] is not None:
-            t=torch.zeroes(256,256)
+        if opt['path']['resume_state'] is not None and opt['phase']=='train':
+            t=torch.zeros(256,256)
             feat_f, sample_ids = self.netH(t, 256, None)
             feat_sv, _ = self.netH(t, 256, sample_ids)
             feat_sf, _ = self.netH(t, 256, sample_ids)
@@ -50,9 +51,12 @@ class CDARL(BaseModel):
             else:
                 optim_params = list(self.netG.parameters())
 
+
             self.optG = torch.optim.Adam(optim_params, lr=opt['train']["optimizer"]["lr"], betas=(0.5, 0.999))
+
             self.optD = torch.optim.Adam(self.netD.parameters(), lr=opt['train']["optimizer"]["lr"], betas=(0.5, 0.999))
-            self.optD2 = torch.optim.Adam(self.netD.parameters(), lr=opt['train']["optimizer"]["lr"], betas=(0.5, 0.999))
+            self.optD2 = torch.optim.Adam(self.netD2.parameters(), lr=opt['train']["optimizer"]["lr"], betas=(0.5, 0.999))
+
             self.load_opt()
             self.log_dict = OrderedDict()
         self.print_network(self.netG)
@@ -64,7 +68,7 @@ class CDARL(BaseModel):
         self.data = self.set_device(data)
         output, _ = self.netG(self.data)
 
-        self.mask_V, self.synt_A, self.mask_F = output #self.A_noisy, self.A_latent, self.B_latent, 
+        self.A_noisy,  self.B_latent,  self.mask_V, self.synt_A, self.mask_F = output #self.A_latent,
 
         patchNum = 256
         feat_f, sample_ids = self.netH(self.data['F'], patchNum, None)
@@ -103,12 +107,13 @@ class CDARL(BaseModel):
 
         output, [l_recon, l_cyc] = self.netG(self.data)
 
-        self.mask_V, self.synt_A, self.mask_F = output #self.A_noisy, self.A_latent, self.B_latent, 
+        self.A_noisy, self.B_latent, self.mask_V, self.synt_A, self.mask_F = output #self.A_latent, 
         l_cyc = l_cyc * h_beta
-        l_recon=l_recon*0.08
+        l_recon=l_recon*0.09
 
         self.set_requires_grad(self.netD, True)
         self.set_requires_grad(self.netD2, True)
+
         self.optD.zero_grad()  
         self.optD2.zero_grad() 
 
@@ -117,19 +122,28 @@ class CDARL(BaseModel):
 
         l_adv_D = self.backward_D_basic(self.netD, self.data['A'], synt_A) * h_alpha
         l_adv_D2 = self.backward_D_basic(self.netD2, self.data['F'],mask_V) * h_alpha
+
         l_adv_D.backward()
         l_adv_D2.backward()
 
         self.optD.step()
+        self.optD2.step()
 
         self.set_requires_grad(self.netD, False)
+        self.set_requires_grad(self.netD2, False)
+
+
         self.optG.zero_grad()
         self.optH.zero_grad()
+
         patchNum = 256
         feat_f, sample_ids = self.netH(self.data['F'], patchNum, None)
+
         feat_sv, _ = self.netH(self.mask_V, patchNum, sample_ids)
         feat_sf, _ = self.netH(self.mask_F, patchNum, sample_ids)
+
         l_cont = 0.0
+
         for f_q, f_sf, f_sv, crit in zip(feat_f, feat_sf, feat_sv, self.netG.loss_nce):
             loss = crit(f_q, f_sf, f_sv) * self.opt['train']['lambda_NCE']
             l_cont += loss.mean()
@@ -138,6 +152,7 @@ class CDARL(BaseModel):
         l_adv_G2 = self.netG.loss_gan(self.netD2(self.mask_V), True) * h_alpha
 
         l_tot = l_recon + l_cyc + l_cont + l_adv_G + l_adv_G2
+        
         l_tot.backward()
         self.optG.step()
         self.optH.step()
@@ -188,9 +203,9 @@ class CDARL(BaseModel):
 
         out_dict['dataA'] = Metrics.tensor2im(self.data['A'][0].detach().float().cpu(), min_max=min_max)
         out_dict['dataF'] = Metrics.tensor2im(self.data['F'][0].detach().float().cpu(), min_max=min_max)
-        # out_dict['A_noisy'] = Metrics.tensor2im(self.A_noisy[0].detach().float().cpu(), min_max=min_max)
+        out_dict['A_noisy'] = Metrics.tensor2im(self.A_noisy[0].detach().float().cpu(), min_max=min_max)
         # out_dict['A_latent'] = Metrics.tensor2im(self.A_latent[0].detach().float().cpu(), min_max=min_max)
-        # out_dict['B_latent'] = Metrics.tensor2im(self.B_latent[0].detach().float().cpu(), min_max=min_max)
+        out_dict['B_latent'] = Metrics.tensor2im(self.B_latent[0].detach().float().cpu(), min_max=min_max)
         out_dict['mask_V'] = Metrics.tensor2im(self.mask_V[0].detach().float().cpu(), min_max=min_max)
         out_dict['synt_A'] = Metrics.tensor2im(self.synt_A[0].detach().float().cpu(), min_max=min_max)
         out_dict['mask_F'] = Metrics.tensor2im(self.mask_F[0].detach().float().cpu(), min_max=min_max)
